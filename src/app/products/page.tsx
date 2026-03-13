@@ -7,7 +7,8 @@ import { Card, CardBody } from '@/components/Card';
 import { Button } from '@/components/Button';
 import Modal from '@/components/Modal';
 import AddProductForm from '@/components/AddProductForm';
-import { AlertContainer, AlertNotification } from '@/components/Alert';
+import EditProductForm from '@/components/EditProductForm';
+import { AlertContainer } from '@/components/Alert';
 import { useAlert } from '@/hooks/useAlert';
 
 interface Product {
@@ -25,6 +26,8 @@ export default function ProductsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const { notifications, addAlert, removeAlert } = useAlert();
 
   useEffect(() => {
@@ -122,7 +125,13 @@ export default function ProductsPage() {
                       <span className="text-sm text-gray-600">Stok: {product.stock}</span>
                     </div>
                     <div className="flex gap-2">
-                      <button className="flex-1 px-4 py-2 text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition">
+                      <button
+                        onClick={() => {
+                          setEditingProduct(product);
+                          setIsEditModalOpen(true);
+                        }}
+                        className="flex-1 px-4 py-2 text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition"
+                      >
                         Edit
                       </button>
                       <button
@@ -155,6 +164,32 @@ export default function ProductsPage() {
           onClose={() => setIsModalOpen(false)}
         />
       </Modal>
+
+      {editingProduct && (
+        <Modal
+          isOpen={isEditModalOpen}
+          title="Edit Produk"
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setEditingProduct(null);
+          }}
+        >
+          <EditProductForm
+            product={editingProduct}
+            onSuccess={(updatedProduct) => {
+              setProducts(products.map((p) => p.id === updatedProduct.id ? updatedProduct : p));
+              setIsEditModalOpen(false);
+              setEditingProduct(null);
+              addAlert('Produk berhasil diupdate', 'success');
+            }}
+            onError={(message) => addAlert(message, 'error')}
+            onClose={() => {
+              setIsEditModalOpen(false);
+              setEditingProduct(null);
+            }}
+          />
+        </Modal>
+      )}
     </div>
   );
 }
